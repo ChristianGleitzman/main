@@ -23,8 +23,12 @@
 //           pio run -e EU -t upload      (or US / AU / AS / JP / KR / IN)
 //
 //  Example values (format reference):
-//     boardID       1014
+//     boardID       1014 (your boards number on the teleagriculture platform)
+
 //     API_KEY       "fkYauyaxirkYjSKrzR8lzKuVnak4l2nV"   (32 chars)
+//     bearear token for SSL connection to website
+
+//     Lora TTN credentials (for LoRaWAN OTAA connection to The Things Network):
 //     OTAA_APPEUI   "0000000000000000"                   (16 hex, usually zeros)
 //     OTAA_DEVEUI   "70B3D57ED005D967"                   (16 hex)
 //     OTAA_APPKEY   "EDA96CD96FC5A6C31CCC77D65284C6A4"   (32 hex)

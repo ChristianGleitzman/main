@@ -182,6 +182,7 @@ _Grouped overview. For the canonical, up-to-date list see [README.md – Impleme
 #### Environmental Sensors
 - **BME280/BMP280/BMP680**: Temperature, humidity, pressure, gas resistance
 - **SHT21**: High-accuracy temperature and humidity
+- **SCD4x (SCD40/SCD41)**: Sensirion CO₂ + temperature + humidity (I2C 0x62); variant auto-detected via `getSensorVariant()`
 - **DHT11/DHT22**: Basic temperature and humidity sensors
 - **DS18B20**: OneWire temperature sensors
 - **RTCDS3231**: Real-time clock with temperature compensation

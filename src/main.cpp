@@ -200,19 +200,30 @@ void setup()
    if (!useBattery)
       webpage = true;
 
-   // LoRa fallback: if LoRa is selected but no credentials are stored or no
-   // LoRa module is attached, switch back to WiFi mode for this session.
+   // Boot status: show the upload mode and the OTAA credentials that the LoRa
+   // credential check below actually evaluates. These reflect the values after
+   // load_Config() (stored board_config.json) and any config-portal input, which
+   // override the compiled board_credentials.h — so this reveals whether the
+   // stored or the compiled keys are active.
+   Serial.println("\n--- Boot status: upload / LoRa credentials ---");
+   Serial.printf("Upload mode : %s\n", upload.c_str());
+   Serial.printf("OTAA DEVEUI : %s\n", OTAA_DEVEUI.c_str());
+   Serial.printf("OTAA APPEUI : %s\n", OTAA_APPEUI.c_str());
+   Serial.printf("OTAA APPKEY : %s\n", OTAA_APPKEY.c_str());
+   Serial.println("----------------------------------------------");
+
+   // LoRa fallback: if LoRa is selected but no OTAA credentials are stored,
+   // switch back to WiFi mode for this session. A missing or unsupported LoRa
+   // module no longer forces WiFi — it only triggers a serial warning, so boards
+   // with newer/unrecognized radios still attempt to use LoRa.
    if (upload == "LORA")
    {
       bool credsOk = (OTAA_DEVEUI != "0000000000000000") &&
                      (OTAA_APPKEY != "00000000000000000000000000000000");
-      bool moduleOk = loRaModulePresent();
 
-      if (!credsOk || !moduleOk)
+      if (!credsOk)
       {
-         Serial.printf("LoRa unavailable (credentials: %s, module: %s) -> switching to WiFi\n",
-                       credsOk ? "ok" : "missing",
-                       moduleOk ? "detected" : "not found");
+         Serial.println("LoRa selected but OTAA credentials missing -> switching to WiFi");
          upload = "WIFI";
 
          if (useDisplay)
@@ -227,6 +238,14 @@ void setup()
             tft->print("using WiFi");
             delay(1500);
          }
+      }
+      else if (!loRaModulePresent())
+      {
+         // Credentials are present, so we stay in LoRa mode. The probe did not
+         // see a supported SX127x (RegVersion != 0x12) — warn, but continue;
+         // transmissions may fail if the radio really is absent/incompatible.
+         Serial.println("WARNING: no supported LoRa module detected (RegVersion != 0x12) "
+                        "-> staying in LoRa mode, transmissions may fail");
       }
    }
 

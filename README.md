@@ -329,38 +329,69 @@ the online [Docu Page](https://gitlab.com/teleagriculture/community/-/tree/main/
 
 ## Implemented Sensors
 
-- **ADS1115** — 4-channel 16-bit ADC (I2C 0x48), used for aquaponic probes: ORP, dissolved oxygen, EC, pH
-- **BATTERY** — battery voltage read from onboard BATSENS pin
-- **BH_1745** — ROHM BH1745NUC RGBC color sensor, outputs Red / Green / Blue / Clear counts (I2C 0x38 / 0x39)
-- **BH_1750** — ambient light sensor, lux output (I2C 0x23 / 0x5C)
-- **BME_280** — temperature, humidity and barometric pressure (I2C)
-- **BMP_280** — temperature and barometric pressure (I2C)
-- **BMP_680** — temperature, humidity, pressure and VOC air quality index (I2C)
-- **CAP_SOIL** — capacitive soil moisture sensor (analog)
-- **CAP_GROOVE** — capacitive groove soil moisture sensor (analog)
-- **DFR FLAME** — DFRobot analog flame detection sensor
-- **DFR LIGHT** — DFRobot analog ambient light sensor
-- **DFR LM35** — DFRobot LM35 analog linear temperature sensor
-- **DHT11** — digital temperature and humidity sensor
-- **DHT22** — digital temperature and humidity sensor (higher accuracy than DHT11)
-- **DS18B20** — 1-Wire waterproof temperature sensor, supports multiple sensors on one bus
-- **HEART_RATE** — Gravity Heart Rate Monitor Sensor (SEN0203 based on AD8232), outputs BPM (analog)
-- **LEVEL** — analog water level sensor
-- **LIS331HH** — 3-axis linear accelerometer, ±6 g full-scale, outputs X / Y / Z in g (I2C 0x18 / 0x19)
-- **LTR_390** — UV index and ambient light sensor (I2C 0x53)
-- **MultiGasV1** — Grove Multichannel Gas Sensor V1 (I2C 0x04) — H₂, CO, NO₂, NH₃, C₄H₁₀, C₃H₈, CH₄, C₂H₅OH
-- **MultiGasV2** — Grove Multichannel Gas Sensor V2 (I2C 0x08) — same gas channels, updated hardware
-- **PRE_LVL** — DFRobot throw-in liquid level transmitter (analog pressure-based depth sensor)
-- **RTCDS3231** — DS3231 real-time clock module with onboard temperature sensor (I2C 0x68)
-- **SERVO** — servo motor output *(control logic not yet implemented)*
-- **SHT_21** — temperature and humidity sensor (I2C 0x40)
-- **SOUND** — DFRobot Gravity analog sound level meter (dB)
-- **SPF_WINDVANE** — SparkFun Weather Meter Kit wind vane, 16-direction ADC lookup, output in degrees
-- **SPF_ANEMOMETER** — SparkFun Weather Meter Kit anemometer, pulse counting over 5 s, output in km/h
-- **TDS** — analog total dissolved solids sensor (water quality, ppm)
-- **UV_DFR** — DFRobot ML8511 analog UV sensor, outputs UV index
-- **VEML7700** — high-accuracy ambient light sensor, lux and white light (I2C 0x10)
-- **WS2812** — RGB LED strip output *(control logic not yet implemented)*
+Each entry is tagged with the **board connector** it plugs into:
+`[I2C]` · `[I2C-5V]` (Grove 5 V I2C) · `[ADC]` (analog input) · `[1-Wire]` · `[EXTRA]` (special pin / function).
+
+- `[I2C]` **ADS1115** — optional 4-channel 16-bit ADC **analog-sensor expansion** (I2C 0x48) for aquaponic/hydroponic water-quality probes: ORP, dissolved oxygen, EC, pH — see [ADS1115 — analog sensor expansion](#ads1115--analog-sensor-expansion) below
+- `[EXTRA]` **BATTERY** — battery voltage read from onboard BATSENS pin
+- `[I2C]` **BH_1745** — ROHM BH1745NUC RGBC color sensor, outputs Red / Green / Blue / Clear counts (I2C 0x38 / 0x39)
+- `[I2C]` **BH_1750** — ambient light sensor, lux output (I2C 0x23 / 0x5C)
+- `[I2C]` **BME_280** — temperature, humidity and barometric pressure (I2C)
+- `[I2C]` **BMP_280** — temperature and barometric pressure (I2C)
+- `[I2C]` **BMP_680** — temperature, humidity, pressure and VOC air quality index (I2C)
+- `[ADC]` **CAP_SOIL** — capacitive soil moisture sensor (analog)
+- `[ADC]` **CAP_GROOVE** — capacitive groove soil moisture sensor (analog)
+- `[ADC]` **DFR FLAME** — DFRobot analog flame detection sensor
+- `[ADC]` **DFR LIGHT** — DFRobot analog ambient light sensor
+- `[ADC]` **DFR LM35** — DFRobot LM35 analog linear temperature sensor
+- `[1-Wire]` **DHT11** — digital temperature and humidity sensor
+- `[1-Wire]` **DHT22** — digital temperature and humidity sensor (higher accuracy than DHT11)
+- `[1-Wire]` **DS18B20** — 1-Wire waterproof temperature sensor, supports multiple sensors on one bus
+- `[ADC]` **HEART_RATE** — Gravity Heart Rate Monitor Sensor (SEN0203 based on AD8232), outputs BPM (analog)
+- `[I2C]` **LEVEL** — water level sensor (read on the I2C connector)
+- `[I2C]` **LIS331HH** — 3-axis linear accelerometer, ±6 g full-scale, outputs X / Y / Z in g (I2C 0x18 / 0x19)
+- `[I2C]` **LTR_390** — UV index and ambient light sensor (I2C 0x53)
+- `[I2C-5V]` **MultiGasV1** — Grove Multichannel Gas Sensor V1 (I2C 0x04) — H₂, CO, NO₂, NH₃, C₄H₁₀, C₃H₈, CH₄, C₂H₅OH
+- `[I2C-5V]` **MultiGasV2** — Grove Multichannel Gas Sensor V2 (I2C 0x08) — same gas channels, updated hardware
+- `[ADC]` **PRE_LVL** — DFRobot throw-in liquid level transmitter (analog pressure-based depth sensor)
+- `[I2C]` **RTCDS3231** — DS3231 real-time clock module with onboard temperature sensor (I2C 0x68)
+- `[I2C]` **SCD4x CO2** — Sensirion SCD40 / SCD41 CO₂, temperature and humidity sensor (I2C 0x62); the firmware auto-detects which variant (SCD40/SCD41/SCD43) is attached
+- `[EXTRA]` **SERVO** — servo motor output *(control logic not yet implemented)*
+- `[I2C]` **SHT_21** — temperature and humidity sensor (I2C 0x40)
+- `[ADC]` **SOUND** — DFRobot Gravity analog sound level meter (dB)
+- `[ADC]` **SPF_WINDVANE** — SparkFun Weather Meter Kit wind vane, 16-direction ADC lookup, output in degrees
+- `[1-Wire]` **SPF_ANEMOMETER** — SparkFun Weather Meter Kit anemometer, pulse counting over 5 s, output in km/h
+- `[ADC]` **TDS** — analog total dissolved solids sensor (water quality, ppm)
+- `[ADC]` **UV_DFR** — DFRobot ML8511 analog UV sensor, outputs UV index
+- `[I2C]` **VEML7700** — high-accuracy ambient light sensor, lux and white light (I2C 0x10)
+- `[EXTRA]` **WS2812** — RGB LED strip output *(control logic not yet implemented)*
+
+### ADS1115 — analog sensor expansion
+
+The **ADS1115 is not a sensor itself** — it is an optional **analog-to-digital
+expansion module** (a 4-channel, 16-bit ADC at I2C address `0x48`). It adds four
+high-resolution analog inputs to the board, specifically for the **DFRobot Gravity
+water-quality probes** used in **aquaponic / hydroponic** setups. These probes need
+far more precision and a stable reference than the ESP32's built-in ADC can offer,
+so they are read through the ADS1115 instead.
+
+Pick **ADS1115** on an I2C connector; the four probes are then read from its fixed
+channels:
+
+| Channel | Probe | Output | DFRobot product |
+|---------|-------|--------|-----------------|
+| A0 | ORP / Redox | mV | Gravity Analog ORP Sensor PRO (SEN0464) |
+| A1 | Dissolved Oxygen (DO) | mg/L | Gravity Analog DO Sensor (SEN0237) |
+| A2 | Electrical Conductivity (EC) | mS/cm | Gravity Analog EC Meter V2, K=1 (DFR0300) |
+| A3 | pH | pH | Gravity Analog pH Sensor V2 (SEN0161-V2) |
+
+All four channels need a one-time **calibration** (stored in `board_cal.json`) to give
+correct values — use the web wizard at `http://<board-ip>/calibrate`. Full procedure:
+[Docu/calibration_ADS1115.md](Docu/calibration_ADS1115.md).
+
+> One ADS1115 module = one set of these four water-quality probes. Without the module,
+> the board has no analog water-quality channels (the ESP32's own ADC pins are used by
+> the simpler analog sensors like TDS, soil moisture, UV, sound, etc.).
 
 ---
 

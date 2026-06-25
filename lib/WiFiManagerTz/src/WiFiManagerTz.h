@@ -1354,7 +1354,14 @@ namespace WiFiManagerNS
         dropdown += "<option value='" + String(optVal) + "'" + dataAttr;
         if (conf == optVal)
           dropdown += " selected";
-        dropdown += ">" + allSensors[i].sensor_name + "</option>";
+        // Clarify in the config portal that the ADS1115 is an analog-sensor
+        // expansion module (4-ch ADC), not a stand-alone sensor.
+        // NOTE: compare against optVal (the enum value); allSensors[i].sensor_id
+        // holds the 1-based JSON sensor-id, so a direct == ADS1115 is off by one.
+        String optLabel = allSensors[i].sensor_name;
+        if (optVal == ADS1115)
+          optLabel += " (analog expansion)";
+        dropdown += ">" + optLabel + "</option>";
       }
     }
 

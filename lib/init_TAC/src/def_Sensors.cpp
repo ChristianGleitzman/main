@@ -816,5 +816,35 @@ const char *proto_sensors = R"([
       "default": "0x18",
       "alt_1": "0x19"
     }
+  },
+  {
+    "sensor-id": 33,
+    "name": "SCD4x CO2",
+    "con_typ": "I2C",
+    "returnCount": 3,
+    "measurements": [
+      {
+        "value": 800,
+        "valueOrder": "CO2v",
+        "unit": "ppm",
+        "data_name": "co2"
+      },
+      {
+        "value": 20.3,
+        "valueOrder": "TEMPERATURE",
+        "unit": "°C",
+        "data_name": "temp"
+      },
+      {
+        "value": 56,
+        "valueOrder": "HUMIDITY",
+        "unit": "%",
+        "data_name": "hum"
+      }
+    ],
+    "addr_num": 1,
+    "possible_i2c_add": {
+      "default": "0x62"
+    }
   }
 ])";

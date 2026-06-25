@@ -115,21 +115,29 @@ The notes below cover the read-implementation details (I2C addresses, datasheet 
 - WS2812: An RGB LED strip - <mark>not implemented now.<mark>
 - SERVO: A servo motor -<mark>not implemented now.<mark>
 - BME_280: A temperature, humidity and pressure sensor.
+- SCD4x CO2: Sensirion SCD40 / SCD41 CO₂ + temperature + humidity sensor (I2C 0x62); the firmware auto-detects the variant.
 - SOUND: Gravity analog Sound level meter https://wiki.dfrobot.com/Gravity__Analog_Sound_Level_Meter_SKU_SEN0232
 - Pressure Level Sensor  https://wiki.dfrobot.com/Throw-in_Type_Liquid_Level_Transmitter_SKU_KIT0139
 - ML8511 UV Sensor https://wiki.dfrobot.com/UV_Sensor_v1.0-ML8511_SKU_SEN0175
 - LM35 temperature sensor https://wiki.dfrobot.com/DFRobot_LM35_Linear_Temperature_Sensor__SKU_DFR0023_   //not tested now
 - DFRobot Analog Ambient Light Sensor https://wiki.dfrobot.com/DFRobot_Ambient_Light_Sensor_SKU_DFR0026   //not tested now
 
-- **ADS1115** *(Advanced — requires optional 4-channel ADC module)*: water quality sensors for aquaponic / hydroponic systems — see [calibration_ADS1115.md](calibration_ADS1115.md)
-  - ADC0: ORP / Redox — https://wiki.dfrobot.com/Gravity_Analog_ORP_Sensor_PRO_SKU_SEN0464
-  - ADC1: DO / Dissolved Oxygen — https://wiki.dfrobot.com/Gravity__Analog_Dissolved_Oxygen_Sensor_SKU_SEN0237
-  - ADC2: EC / Conductivity — https://wiki.dfrobot.com/Gravity__Analog_Electrical_Conductivity_Sensor___Meter_V2__K=1__SKU_DFR0300
+- **ADS1115** *(Advanced — optional analog-sensor expansion module)*: a 4-channel,
+  16-bit ADC (I2C 0x48, GAIN_ONE = ±4.096 V, 0.125 mV/bit). It is **not a sensor itself**
+  but adds four high-precision analog inputs for the DFRobot Gravity **water-quality
+  probes** used in aquaponic / hydroponic systems. The ESP32's own ADC is too noisy for
+  these probes, so they are read through the ADS1115. Each channel needs a one-time
+  calibration (web wizard at `/calibrate`, stored in `board_cal.json`) — see
+  [calibration_ADS1115.md](calibration_ADS1115.md).
+  - ADC0: ORP / Redox (mV) — https://wiki.dfrobot.com/Gravity_Analog_ORP_Sensor_PRO_SKU_SEN0464
+  - ADC1: DO / Dissolved Oxygen (mg/L) — https://wiki.dfrobot.com/Gravity__Analog_Dissolved_Oxygen_Sensor_SKU_SEN0237
+  - ADC2: EC / Conductivity (mS/cm) — https://wiki.dfrobot.com/Gravity__Analog_Electrical_Conductivity_Sensor___Meter_V2__K=1__SKU_DFR0300
   - ADC3: pH — https://wiki.dfrobot.com/Gravity__Analog_pH_Sensor_Meter_Kit_V2_SKU_SEN0161-V2
 
 - BH_1745: ROHM BH1745NUC RGBC color sensor (I2C 0x38 / 0x39) — outputs Red, Green, Blue, Clear as uint16 counts
 - SPF_WINDVANE: SparkFun Weather Meter Kit wind vane — reads ADC voltage and maps to 16 compass directions (degrees)
 - SPF_ANEMOMETER: SparkFun Weather Meter Kit anemometer — counts pulses over 5 s and returns wind speed in km/h
+- LIS331HH: 3-axis linear accelerometer, ±6 g full-scale, outputs X / Y / Z in g (I2C 0x18 / 0x19)
 
 
 
@@ -193,12 +201,15 @@ for technical questions you can write me an email: artdanion at gmail.com
 
 ## Implemented Sensors
 
-- ADS1115
+- ADS1115 (optional analog-sensor expansion — 4-ch 16-bit ADC, I2C 0x48: ORP, DO, EC, pH)
+- BATTERY (battery voltage on the BATSENS pin)
 - BH_1745 (Pimoroni / ROHM BH1745NUC RGBC color sensor, I2C 0x38 / 0x39)
 - BH_1750
 - BME_280
 - BMP_280
 - BMP_680
+- CAP_SOIL (capacitive soil moisture, analog)
+- CAP_GROOVE (capacitive groove moisture, analog)
 - DFR FLAME
 - DFR LIGHT
 - DFR LM35
@@ -206,15 +217,23 @@ for technical questions you can write me an email: artdanion at gmail.com
 - DHT22
 - DS18B20
 - HEART_RATE (Gravity Heart Rate Monitor Sensor SEN0203 based on AD8232)
+- LEVEL (analog water level sensor)
+- LIS331HH (3-axis accelerometer ±6 g, X/Y/Z in g, I2C 0x18 / 0x19)
 - LTR_390
 - MultiGasV1
 - MultiGasV2
+- PRE_LVL (DFRobot throw-in liquid-level / pressure depth transmitter, analog)
 - RTCDS3231
+- SCD4x (Sensirion SCD40 / SCD41 CO₂ + temperature + humidity, I2C 0x62)
+- SERVO (servo output — control logic not yet implemented)
 - SHT_21
+- SOUND (DFRobot Gravity analog sound level meter, dBA)
 - SPF_WINDVANE (SparkFun Weather Meter Kit — wind direction via ADC, 16 compass directions)
 - SPF_ANEMOMETER (SparkFun Weather Meter Kit — wind speed via pulse counting, km/h)
 - TDS
+- UV_DFR (DFRobot ML8511 analog UV sensor, UV index)
 - VEML7700
+- WS2812 (RGB LED strip output — control logic not yet implemented)
 
 ## Sensor Calibration
 
@@ -269,8 +288,8 @@ The payload is a **flat JSON object** — one key per measurement, plus an optio
 
 | Key | Unit | Source sensor(s) |
 |-----|------|-----------------|
-| `temp` | °C | BMP280, BME280, BME680, DS18B20, DHT22, DHT11, SHT21, LM35 |
-| `hum` | % | BME280, BME680, DHT22, DHT11, SHT21 |
+| `temp` | °C | BMP280, BME280, BME680, DS18B20, DHT22, DHT11, SHT21, LM35, SCD40/SCD41 |
+| `hum` | % | BME280, BME680, DHT22, DHT11, SHT21, SCD40/SCD41 |
 | `press` | hPa | BMP280, BME280, BME680 |
 | `alt` | m | BMP280, BME280, BME680 |
 | `resist` | kΩ | BME680 (gas resistance) |
@@ -296,6 +315,7 @@ The payload is a **flat JSON object** — one key per measurement, plus an optio
 | `C3H8` | ppm | MultiGas V1 (propane) |
 | `C4H10` | ppm | MultiGas V1 (butane) |
 | `C2H5OH` | ppm | MultiGas V1 (ethanol) |
+| `co2` | ppm | SCD40 / SCD41 (SCD4x CO₂ sensor) |
 | `Sound lvl` | dBA | DFRobot sound level meter |
 | `Pressure lvl` | mm | Throw-in liquid level transmitter |
 | `flame` | V | DFRobot flame sensor |

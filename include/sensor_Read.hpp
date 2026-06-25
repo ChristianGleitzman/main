@@ -44,6 +44,7 @@
 #include "Adafruit_VEML7700.h"
 #include <LTR390.h>
 #include <SHT2x.h>
+#include <SensirionI2cScd4x.h>
 #include <Multichannel_Gas_GMXXX.h>
 #include <MiCS6814-I2C.h>
 #include <DHT.h>
@@ -307,6 +308,89 @@ void readI2C_Connectors()
             else
                 if (hasNaN(newSensor))
                 LOGW("%s: NaN — not added to sensor vector", newSensor.sensor_name.c_str());
+            else
+                sensorVector.push_back(newSensor);
+        }
+        break;
+
+        case SCD4X:
+        {
+            // Sensirion SCD40 / SCD41 / SCD43 CO2 sensor. All share I2C addr 0x62
+            // and the same driver; periodic measurement works on every variant
+            // (single-shot would only work on SCD41/43, so we don't use it here).
+            String addrStr = allSensors[SCD4X].possible_i2c_add[I2C_con_table[j].addrIndex];
+            uint8_t addr = (uint8_t)strtol(addrStr.c_str(), NULL, 0);
+
+            LOGI("SCD4x @ 0x%02X - connecting...", addr);
+
+            SensirionI2cScd4x scd;
+            scd.begin(Wire, addr);
+
+            // The sensor may still be measuring from a previous cycle (or powered
+            // down) - bring it to a known idle state before (re)configuring.
+            scd.wakeUp();                  // no-op if already awake
+            scd.stopPeriodicMeasurement(); // ignored if it was already idle
+            delay(500);                    // stop command needs ~500 ms
+            scd.reinit();
+            delay(30);
+
+            // Identify the exact chip - answers "did I get an SCD40 or SCD41?"
+            SCD4xSensorVariant variant;
+            if (scd.getSensorVariant(variant) != 0)
+            {
+                LOGE("SCD4x @ 0x%02X not responding - check wiring/address", addr);
+                break;
+            }
+            const char *variantName =
+                (variant == SCD4X_SENSOR_VARIANT_SCD40) ? "SCD40" :
+                (variant == SCD4X_SENSOR_VARIANT_SCD41) ? "SCD41" :
+                (variant == SCD4X_SENSOR_VARIANT_SCD43) ? "SCD43" : "SCD4x (unknown)";
+            LOGI("SCD4x variant detected: %s", variantName);
+
+            // Periodic measurement: first sample is ready after ~5 s. Poll the
+            // data-ready flag instead of a blind delay.
+            if (scd.startPeriodicMeasurement() != 0)
+            {
+                LOGE("SCD4x: startPeriodicMeasurement failed");
+                break;
+            }
+
+            bool dataReady = false;
+            for (int t = 0; t < 60 && !dataReady; t++) // up to ~6 s
+            {
+                delay(100);
+                scd.getDataReadyStatus(dataReady);
+            }
+
+            Sensor newSensor = allSensors[SCD4X];
+            // start from NaN so a failed read is dropped instead of reporting the
+            // JSON placeholder values.
+            newSensor.measurements[0].value = NAN;
+            newSensor.measurements[1].value = NAN;
+            newSensor.measurements[2].value = NAN;
+
+            uint16_t co2 = 0;
+            float scdTemp = NAN, scdHum = NAN;
+            if (dataReady && scd.readMeasurement(co2, scdTemp, scdHum) == 0 && co2 != 0)
+            {
+                newSensor.measurements[0].value = (double)co2;
+                newSensor.measurements[1].value = (double)scdTemp;
+                newSensor.measurements[2].value = (double)scdHum;
+                temperature = scdTemp;
+                LOGI("%s: CO2=%u ppm  temp=%.2f C  hum=%.1f%%",
+                     variantName, co2, scdTemp, scdHum);
+            }
+            else
+            {
+                LOGW("SCD4x: no valid measurement (dataReady=%d, co2=%u ppm)",
+                     (int)dataReady, co2);
+            }
+
+            // leave the sensor idle until the next cycle
+            scd.stopPeriodicMeasurement();
+
+            if (hasNaN(newSensor))
+                LOGW("SCD4x: NaN — not added to sensor vector");
             else
                 sensorVector.push_back(newSensor);
         }

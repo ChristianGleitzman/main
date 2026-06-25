@@ -8,3 +8,4 @@ __pycache__
 .vscode/settings.json
 include/board_credentials.h
 Boards_List.csv
+Boards_List_old.csv
